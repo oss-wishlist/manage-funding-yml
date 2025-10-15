@@ -1,0 +1,24 @@
+name: 'Manage FUNDING.yml'
+description: 'Opens a PR to wishlist projects to add or update FUNDING.yml with oss-wishlist link'
+author: 'OSS Wishlist'
+
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+  wishlists-repo:
+    description: 'Repository containing wishlist issues (e.g., oss-wishlist/wishlists)'
+    required: false
+    default: 'oss-wishlist/wishlists'
+  label:
+    description: 'Label to filter issues by'
+    required: false
+    default: 'funding-yml-requested'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+
+branding:
+  icon: 'heart'
+  color: 'purple'
