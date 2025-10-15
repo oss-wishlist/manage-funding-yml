@@ -44,9 +44,18 @@ jobs:
 
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
-| `github-token` | GitHub token for API access | Yes | - |
+| `github-token` | GitHub token for API access (needs repo and workflow scopes for creating PRs in target repos) | Yes | - |
 | `wishlists-repo` | Repository containing wishlist issues | No | `oss-wishlist/wishlists` |
 | `label` | Label to filter issues by | No | `funding-yml-requested` |
+
+### Required Permissions
+
+The GitHub token used must have the following permissions:
+- `repo` scope to create branches and files in target repositories
+- `workflow` scope if target repositories have workflow files
+- Access to both the wishlists repository and target repositories
+
+**Note:** The default `GITHUB_TOKEN` only has access to the repository where the workflow runs. To create PRs in other repositories, you'll need to use a Personal Access Token (PAT) or GitHub App token with appropriate permissions.
 
 ## Issue Format
 
