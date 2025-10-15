@@ -31865,7 +31865,7 @@ async function run() {
     // Process each issue
     for (const issue of issues) {
       try {
-        await processIssue(octokit, issue);
+        await processIssue(octokit, issue, owner, repo);
       } catch (error) {
         core.error(`Failed to process issue #${issue.number}: ${error.message}`);
         // Continue with other issues even if one fails
@@ -31878,7 +31878,7 @@ async function run() {
   }
 }
 
-async function processIssue(octokit, issue) {
+async function processIssue(octokit, issue, wishlistOwner, wishlistRepo) {
   core.info(`Processing issue #${issue.number}: ${issue.title}`);
   
   // Extract repository from issue body
@@ -31921,14 +31921,14 @@ async function processIssue(octokit, issue) {
   
   // Prepare the new line to add
   const issueUrl = issue.html_url;
-  const ossWishlistLine = `oss_wishlist: ${issueUrl}`;
+  const ossWishlistLine = `oss-wishlist: ${issueUrl}`;
   
   // Create or update FUNDING.yml content
   let newContent;
   if (fundingContent) {
-    // Check if oss_wishlist already exists
-    if (fundingContent.includes('oss_wishlist:')) {
-      core.info('FUNDING.yml already contains oss_wishlist entry, skipping');
+    // Check if oss-wishlist already exists
+    if (fundingContent.includes('oss-wishlist:')) {
+      core.info('FUNDING.yml already contains oss-wishlist entry, skipping');
       return;
     }
     // Add new line to existing content
@@ -32008,7 +32008,7 @@ async function processIssue(octokit, issue) {
 
 Related issue: ${issueUrl}
 
-This change adds the \`oss_wishlist\` field to your FUNDING.yml file, which will display a link to the OSS Wishlist on your repository's funding page.`;
+This change adds the \`oss-wishlist\` field to your FUNDING.yml file, which will display a link to the OSS Wishlist on your repository's funding page.`;
     
     try {
       const { data: pr } = await octokit.rest.pulls.create({
@@ -32024,8 +32024,8 @@ This change adds the \`oss_wishlist\` field to your FUNDING.yml file, which will
       
       // Optionally comment on the original issue
       await octokit.rest.issues.createComment({
-        owner: issue.repository.owner.login,
-        repo: issue.repository.name,
+        owner: wishlistOwner,
+        repo: wishlistRepo,
         issue_number: issue.number,
         body: `✅ Pull request created: ${pr.html_url}`
       });

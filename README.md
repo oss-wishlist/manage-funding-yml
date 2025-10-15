@@ -9,7 +9,7 @@ This action monitors issues in the [oss-wishlist/wishlists](https://github.com/o
 1. Extracts the repository URL from the issue body (looks for "Repository: ...")
 2. Checks if `.github/FUNDING.yml` exists in the target repository
 3. Creates a PR that either:
-   - Adds `oss_wishlist: [issue url]` to existing FUNDING.yml
+   - Adds `oss-wishlist: [issue url]` to existing FUNDING.yml
    - Creates a new FUNDING.yml with that line if it doesn't exist
 
 ## Usage
