@@ -1,0 +1,28 @@
+{
+  "name": "manage-funding-yml",
+  "version": "1.0.0",
+  "description": "Action that opens a PR to a wishlist project with wishlist link",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "ncc build src/index.js -o dist --source-map --license licenses.txt",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oss-wishlist/manage-funding-yml.git"
+  },
+  "keywords": [
+    "github",
+    "action",
+    "funding"
+  ],
+  "author": "OSS Wishlist",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.38.1"
+  }
+}

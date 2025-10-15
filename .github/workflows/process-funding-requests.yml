@@ -1,0 +1,19 @@
+name: Process Funding Requests
+
+on:
+  schedule:
+    # Run every hour
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  process-funding-requests:
+    runs-on: ubuntu-latest
+    name: Process FUNDING.yml requests
+    steps:
+      - name: Process funding requests
+        uses: oss-wishlist/manage-funding-yml@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          wishlists-repo: 'oss-wishlist/wishlists'
+          label: 'funding-yml-requested'
