@@ -31,7 +31,14 @@ For a professional appearance (PRs from `@oss-wishlist-bot` instead of your pers
    - Invite `oss-wishlist-bot` as a member
    - No special permissions needed - regular member is fine
 
-3. **Create a Personal Access Token from the bot account**
+3. **Add bot as collaborator to wishlists repo** (required)
+   - Go to https://github.com/oss-wishlist/wishlists/settings/access
+   - Click **Add people**
+   - Search for `oss-wishlist-bot`
+   - Select **Write** role (needed to add labels and comments)
+   - Send invitation and accept it from the bot account
+
+4. **Create a Personal Access Token from the bot account**
    - Log in as the bot account
    - Go to **Settings** → **Developer settings** → **Personal access tokens** → **Tokens (classic)**
    - Click **Generate new token (classic)**
@@ -39,7 +46,7 @@ For a professional appearance (PRs from `@oss-wishlist-bot` instead of your pers
    - Scopes: Check **public_repo** (or full **repo** if you need private repo support)
    - Click **Generate token** and copy it immediately
 
-4. **Add token to wishlists repository secrets**
+5. **Add token to wishlists repository secrets**
    - In the `oss-wishlist/wishlists` repository, go to **Settings** → **Secrets and variables** → **Actions**
    - Click **New repository secret**
    - Name: `WISHLIST_BOT_TOKEN`
@@ -136,6 +143,17 @@ It extracts:
 - `### Maintainer GitHub Username` → maintainer handle
 - `### Project Repository` → target repository URL
 - Issue URL → wishlist link to add to FUNDING.yml
+
+### Fork-based PR workflow
+
+Since the bot account doesn't have write access to target repositories, the action uses a fork-based workflow:
+
+1. **Fork the repository** (or use existing fork)
+2. **Create a branch** in the fork
+3. **Commit changes** to FUNDING.yml in the fork
+4. **Create a PR** from the fork to the upstream repository
+
+This is the standard open-source contribution workflow and doesn't require the bot to be a collaborator on target repos.
 
 ### Idempotency
 
