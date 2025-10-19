@@ -1,0 +1,24 @@
+# Workflow template for oss-wishlist/wishlists repository
+# Copy this to: .github/workflows/manage-funding-yml.yml
+
+name: Manage FUNDING.yml
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  create-funding-pr:
+    # Only run for issues with the 'funding-yml-requested' label
+    if: contains(github.event.issue.labels.*.name, 'funding-yml-requested')
+    runs-on: ubuntu-latest
+    
+    permissions:
+      issues: write        # To add labels and comments
+      contents: read       # To read repository content
+      
+    steps:
+      - name: Manage FUNDING.yml
+        uses: oss-wishlist/manage-funding-yml@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}

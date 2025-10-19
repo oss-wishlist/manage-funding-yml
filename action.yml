@@ -1,0 +1,23 @@
+name: 'Manage FUNDING.yml for Wishlist Projects'
+description: 'Automatically creates or updates FUNDING.yml in wishlist projects with wishlist link'
+author: 'oss-wishlist'
+
+inputs:
+  github-token:
+    description: 'GitHub token with permissions to create PRs and read issues'
+    required: true
+    default: ${{ github.token }}
+
+outputs:
+  pr-url:
+    description: 'URL of the created or updated PR'
+  status:
+    description: 'Status of the action (success, skipped, error)'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+
+branding:
+  icon: 'heart'
+  color: 'purple'
