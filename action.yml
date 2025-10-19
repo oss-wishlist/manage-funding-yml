@@ -4,9 +4,8 @@ author: 'oss-wishlist'
 
 inputs:
   github-token:
-    description: 'GitHub token with permissions to create PRs and read issues'
+    description: 'GitHub token (PAT from bot account or personal account) with public_repo scope'
     required: true
-    default: ${{ github.token }}
 
 outputs:
   pr-url:

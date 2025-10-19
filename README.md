@@ -13,6 +13,48 @@ When an issue in the wishlists repository is labeled with `funding-yml-requested
 
 ## Usage
 
+### Prerequisites
+
+**Important**: This action needs to create PRs in external repositories (the wishlist projects), so it requires a Personal Access Token (PAT) with appropriate permissions.
+
+#### Recommended: Create a Bot Account
+
+For a professional appearance (PRs from `@oss-wishlist-bot` instead of your personal account):
+
+1. **Create a new GitHub account**
+   - Sign up at https://github.com/signup
+   - Username suggestion: `oss-wishlist-bot`
+   - Use an email like `bot@your-org.com` or create a free email account
+
+2. **Add bot to organization** (optional but recommended)
+   - Go to https://github.com/orgs/oss-wishlist/people
+   - Invite `oss-wishlist-bot` as a member
+   - No special permissions needed - regular member is fine
+
+3. **Create a Personal Access Token from the bot account**
+   - Log in as the bot account
+   - Go to **Settings** → **Developer settings** → **Personal access tokens** → **Tokens (classic)**
+   - Click **Generate new token (classic)**
+   - Name: `Wishlist FUNDING.yml Manager`
+   - Scopes: Check **public_repo** (or full **repo** if you need private repo support)
+   - Click **Generate token** and copy it immediately
+
+4. **Add token to wishlists repository secrets**
+   - In the `oss-wishlist/wishlists` repository, go to **Settings** → **Secrets and variables** → **Actions**
+   - Click **New repository secret**
+   - Name: `WISHLIST_BOT_TOKEN`
+   - Value: Paste the token from step 3
+   - Click **Add secret**
+
+**Result**: All PRs and comments will appear to come from `@oss-wishlist-bot` instead of a personal account.
+
+#### Alternative: Use Your Personal Account
+
+If you prefer, you can use your personal account token:
+1. Create a PAT from your account with `public_repo` scope
+2. Store as `WISHLIST_BOT_TOKEN` secret
+3. PRs will be created as you (@emmairwin)
+
 ### In the wishlists repository
 
 Add this workflow to `.github/workflows/manage-funding-yml.yml`:
@@ -29,18 +71,24 @@ jobs:
     if: contains(github.event.issue.labels.*.name, 'funding-yml-requested')
     runs-on: ubuntu-latest
     
+    permissions:
+      issues: write
+      contents: read
+    
     steps:
       - name: Manage FUNDING.yml
         uses: oss-wishlist/manage-funding-yml@v1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.WISHLIST_BOT_TOKEN }}
 ```
+
+**Note**: The default `GITHUB_TOKEN` will not work because it only has permissions for the wishlists repository, not the external project repositories.
 
 ### Inputs
 
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
-| `github-token` | GitHub token with repo permissions | Yes | `${{ github.token }}` |
+| `github-token` | Personal Access Token with `public_repo` scope (cannot use default `GITHUB_TOKEN`) | Yes | N/A |
 
 ### Outputs
 

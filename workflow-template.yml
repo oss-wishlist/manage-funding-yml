@@ -14,11 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     
     permissions:
-      issues: write        # To add labels and comments
+      issues: write        # To add labels and comments to wishlists issues
       contents: read       # To read repository content
       
     steps:
       - name: Manage FUNDING.yml
         uses: oss-wishlist/manage-funding-yml@v1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # IMPORTANT: Use a PAT with 'public_repo' scope stored in secrets
+          # The default GITHUB_TOKEN cannot create PRs in other repositories
+          github-token: ${{ secrets.WISHLIST_BOT_TOKEN }}
