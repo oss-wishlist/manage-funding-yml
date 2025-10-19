@@ -221,11 +221,13 @@ async function createPullRequest(octokit, owner, repo, data, fundingFile) {
   core.info(`Created/updated ${filePath} in fork`);
   
   // Create pull request from fork to upstream
-  const prBody = `This PR was opened at the request of @${data.maintainer} to add a wishlist link to your repository's sponsor button.
+  const prBody = `This PR was opened at the request of @${data.maintainer} via the Open Source Wishlist process.
 
-This will display the wishlist link in the "Sponsor this project" section of your repository.
+This will display the wishlist link in the "Sponsor this project" section of your repository to help wishlist sponsors find, and fulfill wishes that help this project.
 
-For more information about FUNDING.yml, see: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository`;
+For more information:
+- Open Source Wishlist: https://oss-wishlist.com
+- FUNDING.yml settings: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository`;
   
   const { data: pr } = await octokit.rest.pulls.create({
     owner,
