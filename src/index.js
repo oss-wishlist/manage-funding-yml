@@ -147,35 +147,70 @@ async function createPullRequest(octokit, owner, repo, data, fundingFile) {
   const branchName = `add-wishlist-funding-${Date.now()}`;
   const filePath = fundingFile ? fundingFile.path : '.github/FUNDING.yml';
   
+  // Get authenticated user info
+  const { data: authenticatedUser } = await octokit.rest.users.getAuthenticated();
+  const forkOwner = authenticatedUser.login;
+  
+  core.info(`Authenticated as: ${forkOwner}`);
+  
   // Get default branch
   const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
   const defaultBranch = repoData.default_branch;
   
-  // Get the SHA of the default branch
+  // Check if we already have a fork, if not create one
+  let forkRepo;
+  try {
+    const { data: existingFork } = await octokit.rest.repos.get({
+      owner: forkOwner,
+      repo: repo
+    });
+    forkRepo = existingFork;
+    core.info(`Found existing fork: ${forkOwner}/${repo}`);
+  } catch (error) {
+    if (error.status === 404) {
+      // Create fork
+      core.info(`Creating fork of ${owner}/${repo}...`);
+      const { data: newFork } = await octokit.rest.repos.createFork({
+        owner,
+        repo
+      });
+      forkRepo = newFork;
+      
+      // Wait a bit for fork to be ready
+      core.info('Waiting for fork to be ready...');
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    } else {
+      throw error;
+    }
+  }
+  
+  // Get the SHA of the default branch from the fork
   const { data: refData } = await octokit.rest.git.getRef({
-    owner,
-    repo,
+    owner: forkOwner,
+    repo: repo,
     ref: `heads/${defaultBranch}`
   });
   const baseSha = refData.object.sha;
   
-  // Create new branch
+  // Create new branch in fork
   await octokit.rest.git.createRef({
-    owner,
-    repo,
+    owner: forkOwner,
+    repo: repo,
     ref: `refs/heads/${branchName}`,
     sha: baseSha
   });
   
-  // Create or update FUNDING.yml
+  core.info(`Created branch ${branchName} in fork`);
+  
+  // Create or update FUNDING.yml in fork
   const newContent = createFundingContent(
     fundingFile ? fundingFile.content : null,
     data.wishlistUrl
   );
   
   await octokit.rest.repos.createOrUpdateFileContents({
-    owner,
-    repo,
+    owner: forkOwner,
+    repo: repo,
     path: filePath,
     message: fundingFile ? 'Update FUNDING.yml with wishlist link' : 'Add FUNDING.yml with wishlist link',
     content: Buffer.from(newContent).toString('base64'),
@@ -183,7 +218,9 @@ async function createPullRequest(octokit, owner, repo, data, fundingFile) {
     sha: fundingFile ? fundingFile.sha : undefined
   });
   
-  // Create pull request
+  core.info(`Created/updated ${filePath} in fork`);
+  
+  // Create pull request from fork to upstream
   const prBody = `This PR was opened at the request of @${data.maintainer} to add a wishlist link to your repository's sponsor button.
 
 This will display the wishlist link in the "Sponsor this project" section of your repository.
@@ -194,7 +231,7 @@ For more information about FUNDING.yml, see: https://docs.github.com/en/reposito
     owner,
     repo,
     title: 'Add wishlist link to FUNDING.yml',
-    head: branchName,
+    head: `${forkOwner}:${branchName}`,
     base: defaultBranch,
     body: prBody
   });
