@@ -36079,6 +36079,50 @@ function createFundingContent(existingContent, wishlistUrl) {
 }
 
 /**
+ * Check if there's already an open or closed PR from the bot for this wishlist URL
+ * @param {object} octokit - GitHub API client
+ * @param {string} owner - Repository owner
+ * @param {string} repo - Repository name
+ * @param {string} botUsername - Bot's username
+ * @param {string} wishlistUrl - The wishlist URL to check for
+ * @returns {object|null} Existing PR or null
+ */
+async function checkExistingPR(octokit, owner, repo, botUsername, wishlistUrl) {
+  try {
+    // Check both open and closed PRs
+    const states = ['open', 'closed'];
+    
+    for (const state of states) {
+      const { data: prs } = await octokit.rest.pulls.list({
+        owner,
+        repo,
+        state,
+        per_page: 100
+      });
+      
+      // Look for PRs from the bot with FUNDING.yml in the title
+      const botPRs = prs.filter(pr => 
+        pr.user.login === botUsername && 
+        pr.title.includes('FUNDING.yml')
+      );
+      
+      // Check if any of these PRs contain the same wishlist URL in the body
+      for (const pr of botPRs) {
+        if (pr.body && pr.body.includes(wishlistUrl)) {
+          core.info(`Found existing ${state} PR from bot with same wishlist URL: ${pr.html_url}`);
+          return pr;
+        }
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    core.warning(`Failed to check for existing PRs: ${error.message}`);
+    return null;
+  }
+}
+
+/**
  * Create a pull request to add/update FUNDING.yml
  * @param {object} octokit - GitHub API client
  * @param {string} owner - Repository owner
@@ -36096,6 +36140,13 @@ async function createPullRequest(octokit, owner, repo, data, fundingFile) {
   const forkOwner = authenticatedUser.login;
   
   core.info(`Authenticated as: ${forkOwner}`);
+  
+  // Check for existing PRs from this bot for the same wishlist URL
+  const existingPR = await checkExistingPR(octokit, owner, repo, forkOwner, data.wishlistUrl);
+  if (existingPR) {
+    core.info(`Existing PR found for this wishlist (${existingPR.state}): ${existingPR.html_url}`);
+    return existingPR.html_url;
+  }
   
   // Get default branch
   const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
@@ -36320,6 +36371,22 @@ async function run() {
     
     // Check for existing FUNDING.yml
     const fundingFile = await checkFundingFile(octokit, owner, repo);
+    
+    // Check if wishlist URL is already in FUNDING.yml
+    if (fundingFile) {
+      const decoded = Buffer.from(fundingFile.content, 'base64').toString('utf-8');
+      const fundingData = yaml.load(decoded) || {};
+      
+      if (fundingData.custom) {
+        const customArray = Array.isArray(fundingData.custom) ? fundingData.custom : [fundingData.custom];
+        if (customArray.includes(data.wishlistUrl)) {
+          core.info('Wishlist URL already exists in FUNDING.yml. Skipping PR creation.');
+          await markAsProcessed(octokit, issue.number, `${data.repository} (already has wishlist link)`);
+          core.setOutput('status', 'skipped');
+          return;
+        }
+      }
+    }
     
     // Create pull request
     const prUrl = await createPullRequest(octokit, owner, repo, data, fundingFile);
