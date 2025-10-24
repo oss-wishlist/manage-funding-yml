@@ -24,3 +24,6 @@ jobs:
           # IMPORTANT: Use a PAT with 'public_repo' scope stored in secrets
           # The default GITHUB_TOKEN cannot create PRs in other repositories
           github-token: ${{ secrets.WISHLIST_BOT_TOKEN }}
+          # Optional: URL to refresh wishlist cache after PR creation
+          # Default is staging URL, change to production when ready
+          cache-url: 'https://urchin-app-bozjb.ondigitalocean.app/api/wishlists?refresh=true'

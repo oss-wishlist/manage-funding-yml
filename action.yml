@@ -6,6 +6,10 @@ inputs:
   github-token:
     description: 'GitHub token (PAT from bot account or personal account) with public_repo scope'
     required: true
+  cache-url:
+    description: 'URL to refresh wishlist cache (optional)'
+    required: false
+    default: 'https://urchin-app-bozjb.ondigitalocean.app/api/wishlists?refresh=true'
 
 outputs:
   pr-url:

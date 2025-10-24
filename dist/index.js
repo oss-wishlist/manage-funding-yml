@@ -36343,6 +36343,7 @@ ${error.stack}
 async function run() {
   try {
     const token = core.getInput('github-token', { required: true });
+    const cacheUrl = core.getInput('cache-url', { required: false }) || 'https://urchin-app-bozjb.ondigitalocean.app/api/wishlists?refresh=true';
     const octokit = github.getOctokit(token);
     
     const issue = github.context.payload.issue;
@@ -36393,6 +36394,19 @@ async function run() {
     
     // Mark issue as processed
     await markAsProcessed(octokit, issue.number, prUrl);
+    
+    // Refresh wishlist cache
+    try {
+      core.info('Refreshing wishlist cache...');
+      const response = await fetch(cacheUrl);
+      if (response.ok) {
+        core.info('✅ Wishlist cache refreshed successfully');
+      } else {
+        core.warning(`Failed to refresh cache: ${response.status} ${response.statusText}`);
+      }
+    } catch (error) {
+      core.warning(`Failed to refresh wishlist cache: ${error.message}`);
+    }
     
     core.setOutput('pr-url', prUrl);
     core.setOutput('status', 'success');
