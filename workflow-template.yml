@@ -1,14 +1,14 @@
 # Workflow template for oss-wishlist/wishlists repository
 # Copy this to: .github/workflows/manage-funding-yml.yml
 
-name: Manage FUNDING.yml
+name: Manage Wishlist Actions
 
 on:
   issues:
     types: [opened, labeled]
 
 jobs:
-  create-funding-pr:
+  manage-wishlist:
     # Only run for issues with the 'funding-yml-requested' label
     if: contains(github.event.issue.labels.*.name, 'funding-yml-requested')
     runs-on: ubuntu-latest
@@ -18,7 +18,7 @@ jobs:
       contents: read       # To read repository content
       
     steps:
-      - name: Manage FUNDING.yml
+      - name: Manage Wishlist Actions
         uses: oss-wishlist/manage-funding-yml@v1
         with:
           # IMPORTANT: Use a PAT with 'public_repo' scope stored in secrets

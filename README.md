@@ -1,15 +1,16 @@
 # manage-funding-yml
 
-GitHub Action that automatically creates or updates FUNDING.yml files in wishlist projects tracked in [oss-wishlist/wishlists](https://github.com/oss-wishlist/wishlists).
+GitHub Action that manages wishlist-related automation for projects tracked in [oss-wishlist/wishlists](https://github.com/oss-wishlist/wishlists).
 
 ## What it does
 
 When an issue in the wishlists repository is labeled with `funding-yml-requested`, this action:
 
-1. Parses the issue to extract the project repository and maintainer information
-2. Checks if the target repository has a FUNDING.yml file (in `.github/` or root)
-3. Creates a pull request to add or update the FUNDING.yml with the wishlist link
-4. Adds tracking (label + comment) to prevent duplicate processing
+1. **Parses the wishlist** issue to extract project repository and maintainer information
+2. **Checks for existing FUNDING.yml** (in `.github/` or root) and existing PRs
+3. **Creates a pull request** to add or update the FUNDING.yml with the wishlist link
+4. **Refreshes the wishlist cache** so the JSON feed is up-to-date
+5. **Tracks processing** (label + comment) to prevent duplicate PRs
 
 ## Usage
 
@@ -64,17 +65,17 @@ If you prefer, you can use your personal account token:
 
 ### In the wishlists repository
 
-Add this workflow to `.github/workflows/manage-funding-yml.yml`:
+Add this workflow to `.github/workflows/manage-wishlist-actions.yml`:
 
 ```yaml
-name: Manage FUNDING.yml
+name: Manage Wishlist Actions
 
 on:
   issues:
     types: [opened, labeled]
 
 jobs:
-  create-funding-pr:
+  manage-wishlist:
     if: contains(github.event.issue.labels.*.name, 'funding-yml-requested')
     runs-on: ubuntu-latest
     
@@ -83,7 +84,7 @@ jobs:
       contents: read
     
     steps:
-      - name: Manage FUNDING.yml
+      - name: Manage Wishlist Actions
         uses: oss-wishlist/manage-funding-yml@v1
         with:
           github-token: ${{ secrets.WISHLIST_BOT_TOKEN }}

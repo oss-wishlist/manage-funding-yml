@@ -1,7 +1,7 @@
 {
   "name": "manage-funding-yml",
   "version": "1.0.0",
-  "description": "GitHub Action to manage FUNDING.yml for wishlist projects",
+  "description": "GitHub Action to manage wishlist-related automation: FUNDING.yml PRs, cache refresh, and more",
   "main": "src/index.js",
   "scripts": {
     "build": "ncc build src/index.js -o dist --source-map --license licenses.txt"
