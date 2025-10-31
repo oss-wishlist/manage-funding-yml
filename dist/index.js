@@ -36069,6 +36069,21 @@ function createFundingContent(existingContent, wishlistUrl) {
   } else if (!Array.isArray(fundingData.custom)) {
     fundingData.custom = [fundingData.custom];
   }
+
+  // Migrate any old GitHub issue URLs to the new fulfill URL format
+  const issueUrlRegex = /https:\/\/github\.com\/oss-wishlist\/wishlists\/issues\/(\d+)/;
+  fundingData.custom = fundingData.custom.map((entry) => {
+    if (typeof entry === 'string') {
+      const m = entry.match(issueUrlRegex);
+      if (m) {
+        const issueNum = m[1];
+        const newUrl = `https://oss-wishlist.com/oss-wishlist-website/fullfill?issue=${issueNum}`;
+        core.info(`Migrated FUNDING.yml URL from GitHub issue to fulfill URL: ${entry} -> ${newUrl}`);
+        return newUrl;
+      }
+    }
+    return entry;
+  });
   
   // Add wishlist URL if not already present
   if (!fundingData.custom.includes(wishlistUrl)) {
@@ -36398,6 +36413,7 @@ async function run() {
     // Parse issue data
     const data = await parseIssueData(octokit, issue);
     core.info(`Parsed data: Maintainer=${data.maintainer}, Repo=${data.repository}`);
+  core.info(`Wishlist URL to add: ${data.wishlistUrl}`);
     
     // Parse target repository
     const { owner, repo } = parseRepoUrl(data.repository);
