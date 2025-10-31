@@ -1,5 +1,5 @@
 name: 'Manage Wishlist Actions'
-description: 'Manages wishlist-related automation: FUNDING.yml PRs, cache refresh, and other wishlist tasks'
+description: 'Automates wishlist tasks: adds/updates FUNDING.yml via PRs, refreshes cache, and tracks idempotently'
 author: 'oss-wishlist'
 
 inputs:

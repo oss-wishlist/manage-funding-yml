@@ -1,4 +1,4 @@
-# manage-funding-yml
+# manage-wishlist-actions
 
 GitHub Action that manages wishlist-related automation for projects tracked in [oss-wishlist/wishlists](https://github.com/oss-wishlist/wishlists).
 
@@ -71,13 +71,18 @@ Add this workflow to `.github/workflows/manage-wishlist-actions.yml`:
 name: Manage Wishlist Actions
 
 on:
-  issues:
-    types: [opened, labeled]
+   issues:
+      # Run only when labels change to reduce duplicate triggers
+      types: [labeled]
 
 jobs:
   manage-wishlist:
-    if: contains(github.event.issue.labels.*.name, 'funding-yml-requested')
+      # Only run for issues that have been approved
+      if: contains(github.event.issue.labels.*.name, 'approved-wishlist')
     runs-on: ubuntu-latest
+      concurrency:
+         group: manage-wishlist-${{ github.event.issue.number }}
+         cancel-in-progress: true
     
     permissions:
       issues: write
@@ -85,7 +90,7 @@ jobs:
     
     steps:
       - name: Manage Wishlist Actions
-        uses: oss-wishlist/manage-funding-yml@v1
+            uses: oss-wishlist/manage-wishlist-actions@v1
         with:
           github-token: ${{ secrets.WISHLIST_BOT_TOKEN }}
 ```
@@ -163,6 +168,10 @@ The action tracks processed issues using:
 - A hidden HTML comment: `<!-- funding-yml-pr: <url> -->`
 
 If either is present, the action skips processing.
+
+Additional safeguards:
+- The workflow uses GitHub Actions concurrency keyed by issue number to avoid parallel duplicate runs
+- PRs include the wishlist issue URL in the body; the action checks existing PRs (open/closed) from the bot for the same URL and reuses them if found
 
 ### Error handling
 

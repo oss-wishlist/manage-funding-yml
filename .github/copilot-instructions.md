@@ -1,10 +1,10 @@
-The repository: manage-funding-yml
+The repository: manage-wishlist-actions
 
 ## Purpose
 This GitHub Action automates FUNDING.yml management for wishlist projects tracked in https://github.com/oss-wishlist/wishlists.
 
 ## What this action does (detailed workflow)
-1. **Triggers**: Runs when issues in `oss-wishlist/wishlists` are opened or labeled with `funding-yml-requested`
+1. **Triggers**: Runs when issues in `oss-wishlist/wishlists` are labeled with `approved-wishlist`
 2. **Parse issue**: Extract from issue body:
    - `Project Repository` field → target repository URL
    - `Maintainer GitHub user name` field → maintainer handle
@@ -40,10 +40,10 @@ This GitHub Action automates FUNDING.yml management for wishlist projects tracke
    - This provides redundancy and makes tracking visible
 
 ## Key constraints and patterns
-- **Only process issues with label**: `funding-yml-requested` and status `open`
+- **Only process issues with label**: `approved-wishlist` and status `open`
 - **Performance**: Check `.github/FUNDING.yml` via API first (most common location), fall back to root only if 404
 - **Idempotency tracking**: Use BOTH a label (`funding-yml-processed`) AND a hidden comment (`<!-- funding-yml-pr: <pr_url> -->`) after creating PR. Check for either before processing.
-- **Error handling**: If ANY errors occur (malformed fields, missing data, target repo doesn't exist, PR creation fails, etc.), open an issue in THIS repo (`oss-wishlist/manage-funding-yml`) with details for investigation
+- **Error handling**: If ANY errors occur (malformed fields, missing data, target repo doesn't exist, PR creation fails, etc.), open an issue in THIS repo (`oss-wishlist/manage-wishlist-actions`) with details for investigation
 
 ## Implementation guidance for AI agents
 
@@ -70,7 +70,7 @@ This GitHub Action automates FUNDING.yml management for wishlist projects tracke
    - `POST /repos/{owner}/{repo}/pulls` (create PR)
    - `POST /repos/{owner}/{repo}/issues/{issue_number}/comments` (add tracking comment)
    - `POST /repos/{owner}/{repo}/issues/{issue_number}/labels` (add `funding-yml-processed` label)
-   - `POST /repos/oss-wishlist/manage-funding-yml/issues` (report errors)
+   - `POST /repos/oss-wishlist/manage-wishlist-actions/issues` (report errors)
 3. **FUNDING.yml parsing**: If file exists, parse YAML and append to `custom` array if not already present
 4. **Idempotency tracking**: After PR creation:
    - Comment on issue with `<!-- funding-yml-pr: <pr_url> -->` marker
@@ -80,7 +80,7 @@ This GitHub Action automates FUNDING.yml management for wishlist projects tracke
 ### Code patterns
 - Use `@actions/core`, `@actions/github`, and `@octokit/rest` for Node.js implementation
 - Use environment variables: `GITHUB_TOKEN`, `GITHUB_REPOSITORY`, `GITHUB_EVENT_PATH`
-- Error handling: Wrap all operations in try-catch. On any error, create an issue in `oss-wishlist/manage-funding-yml` with title `Error processing wishlist issue #<number>` and body containing error details, stack trace, and link to original issue
+- Error handling: Wrap all operations in try-catch. On any error, create an issue in `oss-wishlist/manage-wishlist-actions` with title `Error processing wishlist issue #<number>` and body containing error details, stack trace, and link to original issue
 - Example FUNDING.yml format:
   ```yaml
   custom: ['https://github.com/oss-wishlist/wishlists/issues/123']

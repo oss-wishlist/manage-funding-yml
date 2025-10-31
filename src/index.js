@@ -187,8 +187,9 @@ async function checkExistingPR(octokit, owner, repo, botUsername, wishlistUrl) {
  * @param {object|null} fundingFile - Existing FUNDING.yml info
  * @returns {string} PR URL
  */
-async function createPullRequest(octokit, owner, repo, data, fundingFile) {
-  const branchName = `add-wishlist-funding-${Date.now()}`;
+async function createPullRequest(octokit, owner, repo, data, fundingFile, issueNumber) {
+  // Use a deterministic branch name per wishlist issue to avoid parallel-run duplication
+  const branchName = `add-wishlist-funding-${issueNumber}`;
   const filePath = fundingFile ? fundingFile.path : '.github/FUNDING.yml';
   
   // Get authenticated user info
@@ -243,15 +244,22 @@ async function createPullRequest(octokit, owner, repo, data, fundingFile) {
   });
   const baseSha = refData.object.sha;
   
-  // Create new branch in fork
-  await octokit.rest.git.createRef({
-    owner: forkOwner,
-    repo: repo,
-    ref: `refs/heads/${branchName}`,
-    sha: baseSha
-  });
-  
-  core.info(`Created branch ${branchName} in fork`);
+  // Create new branch in fork (or reuse if it already exists)
+  try {
+    await octokit.rest.git.createRef({
+      owner: forkOwner,
+      repo: repo,
+      ref: `refs/heads/${branchName}`,
+      sha: baseSha
+    });
+    core.info(`Created branch ${branchName} in fork`);
+  } catch (err) {
+    if (err.status === 422) {
+      core.info(`Branch ${branchName} already exists in fork. Reusing.`);
+    } else {
+      throw err;
+    }
+  }
   
   // Create or update FUNDING.yml in fork
   const newContent = createFundingContent(
@@ -272,25 +280,42 @@ async function createPullRequest(octokit, owner, repo, data, fundingFile) {
   core.info(`Created/updated ${filePath} in fork`);
   
   // Create pull request from fork to upstream
-  const prBody = `This PR was opened at the request of @${data.maintainer} via the Open Source Wishlist process.
+  const prBody = `This PR was opened at the request of @${data.maintainer} to add a wishlist link to your repository's sponsor button.
+
+Wishlist issue: ${data.wishlistUrl}
 
 This will display the wishlist link in the "Sponsor this project" section of your repository to help wishlist sponsors find, and fulfill wishes that help this project.
 
 For more information:
 - Open Source Wishlist: https://oss-wishlist.com
 - FUNDING.yml settings: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository`;
-  
-  const { data: pr } = await octokit.rest.pulls.create({
-    owner,
-    repo,
-    title: 'Add wishlist link to FUNDING.yml',
-    head: `${forkOwner}:${branchName}`,
-    base: defaultBranch,
-    body: prBody
-  });
-  
-  core.info(`Created PR: ${pr.html_url}`);
-  return pr.html_url;
+
+  try {
+    const { data: pr } = await octokit.rest.pulls.create({
+      owner,
+      repo,
+      title: 'Add wishlist link to FUNDING.yml',
+      head: `${forkOwner}:${branchName}`,
+      base: defaultBranch,
+      body: prBody
+    });
+    core.info(`Created PR: ${pr.html_url}`);
+    return pr.html_url;
+  } catch (err) {
+    // If a PR already exists for this branch, surface that PR instead of failing
+    if (err.status === 422) {
+      core.info('PR might already exist for this branch. Looking it up...');
+      const { data: existingPRs } = await octokit.rest.pulls.list({ owner, repo, state: 'open', head: `${forkOwner}:${branchName}` });
+      if (existingPRs && existingPRs.length > 0) {
+        core.info(`Found existing PR: ${existingPRs[0].html_url}`);
+        return existingPRs[0].html_url;
+      }
+      // Fallback: check any PRs (open/closed) containing the wishlist URL
+      const maybeExisting = await checkExistingPR(octokit, owner, repo, forkOwner, data.wishlistUrl);
+      if (maybeExisting) return maybeExisting.html_url;
+    }
+    throw err;
+  }
 }
 
 /**
@@ -384,13 +409,13 @@ ${error.stack}
   
   await octokit.rest.issues.create({
     owner: 'oss-wishlist',
-    repo: 'manage-funding-yml',
+    repo: 'manage-wishlist-actions',
     title: `Error processing wishlist issue #${issueNumber}`,
     body: errorBody,
     labels: ['error', 'automated']
   });
   
-  core.error(`Reported error to manage-funding-yml repo`);
+  core.error(`Reported error to manage-wishlist-actions repo`);
 }
 
 /**
@@ -406,6 +431,14 @@ async function run() {
     
     if (!issue) {
       core.setFailed('No issue found in context');
+      return;
+    }
+    
+    // Defensive gating: ensure the issue has been approved before proceeding
+    const labels = (issue.labels || []).map(l => typeof l === 'string' ? l : l.name);
+    if (!labels.includes('approved-wishlist')) {
+      core.info('Issue does not have approved-wishlist label. Skipping.');
+      core.setOutput('status', 'skipped');
       return;
     }
     
@@ -446,7 +479,7 @@ async function run() {
     }
     
     // Create pull request
-    const prUrl = await createPullRequest(octokit, owner, repo, data, fundingFile);
+  const prUrl = await createPullRequest(octokit, owner, repo, data, fundingFile, issue.number);
     
     // Mark issue as processed
     await markAsProcessed(octokit, issue.number, prUrl);
@@ -472,7 +505,7 @@ async function run() {
     core.error(`Action failed: ${error.message}`);
     core.error(error.stack);
     
-    // Report error to manage-funding-yml repo
+  // Report error to manage-wishlist-actions repo
     try {
       const token = core.getInput('github-token', { required: true });
       const octokit = github.getOctokit(token);
