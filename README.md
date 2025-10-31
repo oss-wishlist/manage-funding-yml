@@ -89,7 +89,7 @@ jobs:
       contents: read
     
     steps:
-      - name: Manage Wishlist Actions
+         - name: Manage Wishlist Actions
             uses: oss-wishlist/manage-wishlist-actions@v1
         with:
           github-token: ${{ secrets.WISHLIST_BOT_TOKEN }}
@@ -111,6 +111,15 @@ jobs:
 | `status` | Status of the action (`success`, `skipped`, or `error`) |
 
 ## Development
+
+### Versioning and pinning
+
+- Recommended: pin to the major tag to receive compatible fixes automatically:
+   - `uses: oss-wishlist/manage-wishlist-actions@v1`
+- Pin to an exact release for immutability:
+   - `uses: oss-wishlist/manage-wishlist-actions@v1.1.0`
+
+When a new release is cut, the moving `v1` tag will be updated to point at the latest v1.x.x.
 
 ### Setup
 
