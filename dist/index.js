@@ -35986,8 +35986,8 @@ async function parseIssueData(octokit, issue) {
   // Remove markdown link formatting if present
   const repoUrl = repository ? repository.replace(/\[(.+)\]\((.+)\)/, '$2') : null;
   
-  // Wishlist URL is the current issue
-  const wishlistUrl = issue.html_url;
+  // Wishlist URL should be the oss-wishlist fulfill URL, keyed by the wishlist issue number
+  const wishlistUrl = `https://oss-wishlist.com/fullfill?issue=${issue.number}`;
   
   if (!maintainer || !repoUrl) {
     throw new Error(`Failed to parse required fields. Maintainer: ${maintainer}, Repository: ${repoUrl}`);

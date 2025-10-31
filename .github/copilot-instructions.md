@@ -8,7 +8,7 @@ This GitHub Action automates FUNDING.yml management for wishlist projects tracke
 2. **Parse issue**: Extract from issue body:
    - `Project Repository` field → target repository URL
    - `Maintainer GitHub user name` field → maintainer handle
-   - Issue URL → the wishlist URL to add to FUNDING.yml
+   - Issue number → construct the wishlist URL to add to FUNDING.yml as `https://oss-wishlist.com/oss-wishlist-website/fullfill?issue=<number>`
    - **Template format**: Issues contain structured fields like:
      ```
      ### Maintainer GitHub Username
@@ -82,9 +82,9 @@ This GitHub Action automates FUNDING.yml management for wishlist projects tracke
 - Use environment variables: `GITHUB_TOKEN`, `GITHUB_REPOSITORY`, `GITHUB_EVENT_PATH`
 - Error handling: Wrap all operations in try-catch. On any error, create an issue in `oss-wishlist/manage-wishlist-actions` with title `Error processing wishlist issue #<number>` and body containing error details, stack trace, and link to original issue
 - Example FUNDING.yml format:
-  ```yaml
-  custom: ['https://github.com/oss-wishlist/wishlists/issues/123']
-  ```
+   ```yaml
+   custom: ['https://oss-wishlist.com/oss-wishlist-website/fullfill?issue=123']
+   ```
 - If `custom` already exists with other URLs, merge: `custom: ['existing-url', 'https://...']`
 
 ### Testing and debugging

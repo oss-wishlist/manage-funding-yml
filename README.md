@@ -148,7 +148,7 @@ The action looks for wishlist data in this order:
 It extracts:
 - `### Maintainer GitHub Username` → maintainer handle
 - `### Project Repository` → target repository URL
-- Issue URL → wishlist link to add to FUNDING.yml
+- Issue number → constructs `https://oss-wishlist.com/oss-wishlist-website/fullfill?issue=<number>` for FUNDING.yml
 
 ### Fork-based PR workflow
 
